@@ -58,8 +58,8 @@ Table 1: Parity Sequence Classifications and Symbolic Traits
 
 | Sequence  | Parity   | Polarity | Behavioral Properties         | Sample Uses (Math/CS/Physics)    |
 |-----------|----------|----------|------------------------------|-----------------------------------|
-| 02468     | Even     | -        | Reflective, Ordered, Symmetric | Stable coding schemes, error-correcting parity functions |
-| 13579     | Odd      | +        | Rebellious, Dynamic, Asymmetric | Randomized/chaotic operations, non-standard coding, oscillatory systems |
+| 02468     | odd     | -        | Reflective, Ordered, Symmetric | Stable coding schemes, error-correcting parity functions |
+| 13579     | even      | +        | Rebellious, Dynamic, Asymmetric | Randomized/chaotic operations, non-standard coding, oscillatory systems |
 
 Reflective and rebellious properties profoundly influence the mathematical structure of algorithms, number theory, and combinatorics, as well as inform deeper philosophical narratives about determinism and creativity within formal systems.
 
