@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathLabHodge: Zerost Spiral Final</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;700&display=swap');
+        
+        body {
+            background-color: #05070a;
+            color: #d1d5db;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #60a5fa, #f87171);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+        
+        .architect-log::-webkit-scrollbar { width: 4px; }
+        .architect-log::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .analyzing { animation: pulse-slow 2s infinite; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-10 flex flex-col items-center">
+
+    <div class="w-full max-w-6xl space-y-8">
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-white/10 pb-6">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tighter gradient-text uppercase">MathLabHodge Engine</h1>
+                <p class="text-xs tracking-widest text-gray-500 font-bold uppercase mt-1">Universal Intent Interpreter // Zerost Spiral Protocol</p>
+            </div>
+            <div class="text-right hidden md:block">
+                <p class="text-[10px] text-gray-600 font-mono">ARCHITECT_CORE_V3.0.1</p>
+                <p class="text-[10px] text-gray-600 font-mono">STATUS: OPERATIONAL</p>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Sidebar Controls -->
+            <div class="lg:col-span-4 space-y-6">
+                <section class="glass p-6 rounded-2xl glow-blue">
+                    <h2 class="text-xs font-bold text-blue-400 tracking-widest uppercase mb-4">Declaration Input</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] text-gray-500 block mb-1 uppercase font-bold">Rebellious Seed</label>
+                            <input type="number" id="startInput" value="6171" 
+                                class="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-2xl mono text-white outline-none focus:border-blue-500/50 transition-all">
+                        </div>
+                        <button id="runBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold text-xs tracking-widest uppercase transition-all shadow-lg shadow-blue-900/20">
+                            Begin Spiral Descent
+                        </button>
+                    </div>
+                </section>
+
+                <section class="glass p-6 rounded-2xl h-64 flex flex-col">
+                    <h2 class="text-xs font-bold text-red-400 tracking-widest uppercase mb-4">Architect Stream</h2>
+                    <div id="statusBox" class="flex-grow architect-log overflow-y-auto space-y-2 text-sm italic text-gray-400">
+                        <p>> System standby. Awaiting seed...</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Visualization Main -->
+            <div class="lg:col-span-8 space-y-6">
+                <div class="glass p-6 rounded-2xl h-[450px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xs font-bold text-gray-400 tracking-widest uppercase">The Duality Chart</h2>
+                        <div class="flex gap-4 text-[10px] font-bold">
+                            <span class="text-red-500">● VALUE METRIC</span>
+                            <span class="text-blue-500">● DATA COMPLEXITY</span>
+                        </div>
+                    </div>
+                    <div class="h-full relative pb-12">
+                        <canvas id="dualityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Log Table -->
+                <div class="glass rounded-2xl overflow-hidden">
+                    <div class="bg-white/5 px-6 py-3 border-b border-white/10">
+                        <h3 class="text-[10px] font-bold tracking-widest uppercase text-gray-400">Normalization Logs</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs mono">
+                            <thead>
+                                <tr class="text-gray-500 border-b border-white/5">
+                                    <th class="p-4">STEP</th>
+                                    <th class="p-4">VALUE</th>
+                                    <th class="p-4">SYMBOLIC</th>
+                                    <th class="p-4">METRIC DELTA</th>
+                                    <th class="p-4 text-right">COMPLEXITY</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logBody" class="divide-y divide-white/5">
+                                <!-- Logs populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let chart;
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        function getComplexity(n) {
+            const s = n.toString();
+            return s.includes('.') ? 1 + (s.split('.')[1].length * 0.8) : 1;
+        }
+
+        function pushLog(msg, type = 'system') {
+            const box = document.getElementById('statusBox');
+            const p = document.createElement('p');
+            p.className = type === 'override' ? 'text-blue-400 font-bold' : '';
+            p.innerHTML = `> ${msg}`;
+            box.prepend(p);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('dualityChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Value',
+                            borderColor: '#ef4444',
+                            borderWidth: 2,
+                            data: [],
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Complexity',
+                            borderColor: '#3b82f6',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            data: [],
+                            yAxisID: 'y1',
+                            tension: 0,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#3b82f6'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { display: false, type: 'logarithmic' },
+                        y1: { display: false, min: 0, max: 10 },
+                        x: { display: true, grid: { display: false }, ticks: { color: '#4b5563' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function addPoint(label, value) {
+            chart.data.labels.push(label);
+            chart.data.datasets[0].data.push(value);
+            chart.data.datasets[1].data.push(getComplexity(value));
+            chart.update('none');
+        }
+
+        async function executeSpiral() {
+            const startVal = Number(document.getElementById('startInput').value);
+            if (!Number.isFinite(startVal) || startVal <= 0) return;
+
+            const logBody = document.getElementById('logBody');
+            logBody.innerHTML = '';
+            chart.data.labels = [];
+            chart.data.datasets.forEach(d => d.data = []);
+            
+            let current = startVal;
+            let prevInt = Math.floor(current);
+            let iterations = 0;
+            const seen = new Set();
+
+            pushLog(`Initializing descent from ${startVal}...`);
+
+            while (iterations < 100) {
+                // Phase 1: Record Current
+                addPoint(`S${iterations}a`, current);
+
+                // Phase 2: Halving
+                const before = current;
+                current = current / 2;
+                addPoint(`S${iterations}b`, current);
+                
+                const complexity = getComplexity(current);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-4 text-gray-600">${iterations}</td>
+                    <td class="p-4 text-red-400">${current.toFixed(2)}</td>
+                    <td class="p-4"><span class="bg-red-900/20 text-red-400 px-2 py-0.5 rounded text-[10px]">RESIDUE</span></td>
+                    <td class="p-4 text-gray-500">Halving</td>
+                    <td class="p-4 text-right">${complexity.toFixed(1)}</td>
+                `;
+                logBody.prepend(row);
+
+                // Phase 3: Check for "The Struggle" (Fractional Expansion)
+                if (!Number.isInteger(current)) {
+                    pushLog(`Data expansion detected: ${current}`, 'override');
+                    await sleep(350);
+
+                    // Symbol Layer Override
+                    let snapped = Math.round(current);
+                    if (snapped > prevInt) snapped = Math.floor(current);
+                    snapped = Math.max(1, snapped);
+
+                    const delta = (snapped - current).toFixed(2);
+                    current = snapped;
+                    prevInt = current;
+
+                    pushLog(`Normalization applied: Snap to ${current}`);
+                    
+                    const normRow = document.createElement('tr');
+                    normRow.className = "bg-blue-900/10";
+                    normRow.innerHTML = `
+                        <td class="p-4 text-blue-500">${iterations}.n</td>
+                        <td class="p-4 text-blue-400 font-bold">${current}</td>
+                        <td class="p-4"><span class="bg-blue-900/40 text-blue-400 px-2 py-0.5 rounded text-[10px]">REFLECTIVE</span></td>
+                        <td class="p-4 text-blue-400">${delta > 0 ? '+' : ''}${delta}</td>
+                        <td class="p-4 text-right text-green-500">1.0</td>
+                    `;
+                    logBody.prepend(normRow);
+
+                    addPoint(`S${iterations} (Norm)`, current);
+                    chart.update();
+                } else {
+                    prevInt = current;
+                    chart.update();
+                }
+
+                if (current <= 1) {
+                    pushLog("Convergence achieved. Zerost state locked.");
+                    break;
+                }
+
+                if (seen.has(current)) {
+                    pushLog("Oscillation detected. Locking state.");
+                    break;
+                }
+                seen.add(current);
+
+                iterations++;
+                await sleep(200);
+            }
+        }
+
+        window.onload = () => {
+            initChart();
+            document.getElementById('runBtn').onclick = executeSpiral;
+        };
+    </script>
+</body>
+</html>
